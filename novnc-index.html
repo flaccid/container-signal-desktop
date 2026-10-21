@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Signal Desktop</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #1a1b26; color: #d6d6d6;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .wrap { display: flex; height: 100%; align-items: center; justify-content: center;
+    flex-direction: column; gap: 12px; }
+  .spinner { width: 28px; height: 28px; border: 3px solid #3a3b4d; border-top-color: #6162d8;
+    border-radius: 50%; animation: spin 0.9s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="spinner"></div>
+  <div>Starting Signal Desktop…</div>
+</div>
+<script>
+// Launcher for the noVNC client.
+//
+// The kube-workspaces reverse proxy strips the "/proxy/{namespace}/{name}/"
+// prefix before forwarding a request to the workspace, but the browser keeps
+// that prefix in its own URL. noVNC builds its websocket URL from the host
+// root ("ws://host/websockify"), which would bypass the proxy entirely, so
+// the websocket path has to carry the proxy prefix.
+//
+// The prefix cannot be baked into the image: it depends on the namespace and
+// workspace name, which are only known in the browser. Derive it from the
+// current location instead — the page is always served from the workspace
+// root, so everything up to the last "/" is the prefix.
+(function () {
+  var prefix = window.location.pathname.replace(/[^/]*$/, "");
+  var path = prefix.replace(/^\/+/, "") + "websockify";
+  var params = new URLSearchParams({
+    path: path,
+    autoconnect: "true",
+    reconnect: "true",
+    resize: "scale"
+  });
+  window.location.replace("vnc.html?" + params.toString());
+})();
+</script>
+</body>
+</html>
