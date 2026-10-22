@@ -2,7 +2,7 @@
 
 Debian 13 (Trixie) with Signal Desktop installed from Signal's official APT
 repository using its published signing key and `signal-desktop.sources` file.
-The amd64-only image provides browser access through Xvfb, Fluxbox, x11vnc,
+The amd64-only image provides browser access through TigerVNC, Fluxbox,
 and noVNC/websockify on port **6080**.
 
 ## Run
@@ -23,7 +23,46 @@ be writable by that user. Persist `/home/signal` to retain the linked-device
 identity, message database, and configuration across container replacements.
 An empty profile starts a new linked-device setup.
 
-`SCREEN` defaults to `1280x800x24`; noVNC scales the fixed display to the browser.
+### Display settings
+
+The desktop automatically resizes to the browser viewport using TigerVNC and
+noVNC's remote-resize support. This changes the actual desktop resolution rather
+than stretching a fixed-size image. Fluxbox remains the window manager.
+
+| Environment variable | Default | Purpose |
+| --- | --- | --- |
+| `SCREEN` | `1920x1080x24` | Initial width × height × colour depth before a browser connects |
+| `NOVNC_RESIZE` | `remote` | `remote`: resize desktop to browser; `off`: native pixels/scrolling; `scale`: scale fixed desktop |
+| `NOVNC_QUALITY` | `8` | JPEG quality, `0`–`9`; higher uses more bandwidth |
+| `NOVNC_COMPRESSION` | `2` | Compression level, `0`–`9`; lower favours less compression work over bandwidth |
+| `VNC_FRAMERATE` | `60` | Maximum VNC updates per second, not a guaranteed frame rate |
+
+Quality and compression affect encodings that support those controls. Actual
+motion performance depends on available CPU, network bandwidth and the browser.
+The desktop is shared: resizing by one connected browser affects other viewers.
+
+For manual control, choose **Scaling mode → None** in noVNC's settings, then
+right-click the Fluxbox desktop and choose **Resolution**. The menu lists modes
+supported by the running X server, including added 1600×900, 1440p and 4K modes.
+Automatic remote resizing can otherwise replace a manually selected resolution
+when the browser viewport changes.
+`NOVNC_RESIZE=off` makes manual control the default for new connections.
+
+For example, start at 1440p with manual sizing:
+
+```bash
+docker run --rm -p 127.0.0.1:6080:6080 \
+  -e SCREEN=2560x1440x24 -e NOVNC_RESIZE=off \
+  --mount source=signal-profile,target=/home/signal \
+  flaccid/signal-desktop:latest
+```
+
+Persisted Fluxbox preferences are retained. The session uses a generated runtime
+menu with resolution controls and includes `~/.fluxbox/menu` as **Custom menu**
+when that file exists.
+The session keeps a black background and suppresses theme wallpaper helpers to
+avoid background-update races during live resizing. Other style overrides remain.
+
 `NOVNC_PORT` defaults to `6080`; raw VNC listens on loopback port `5900` only.
 Optional `VNC_PASSWORD` enables the noVNC password prompt (traditional VNC
 authentication uses at most eight password characters).

@@ -32,17 +32,24 @@
 // workspace name, which are only known in the browser. Derive it from the
 // current location instead — the page is always served from the workspace
 // root, so everything up to the last "/" is the prefix.
-(function () {
+(async function () {
+  var response = await fetch("desktop-config.json", { cache: "no-store" });
+  if (!response.ok) throw new Error("Could not load desktop settings");
+  var config = await response.json();
   var prefix = window.location.pathname.replace(/[^/]*$/, "");
   var path = prefix.replace(/^\/+/, "") + "websockify";
   var params = new URLSearchParams({
     path: path,
     autoconnect: "true",
     reconnect: "true",
-    resize: "scale"
+    resize: config.resize,
+    quality: config.quality,
+    compression: config.compression
   });
   window.location.replace("vnc.html?" + params.toString());
-})();
+})().catch(function (error) {
+  document.querySelector(".wrap").textContent = error.message;
+});
 </script>
 </body>
 </html>

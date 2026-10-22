@@ -19,7 +19,11 @@ ENV DEBIAN_FRONTEND=noninteractive \
     DISPLAY=:0 \
     HOME=/home/signal \
     XDG_RUNTIME_DIR=/tmp/.runtime \
-    SCREEN=1280x800x24 \
+    SCREEN=1920x1080x24 \
+    NOVNC_RESIZE=remote \
+    NOVNC_QUALITY=8 \
+    NOVNC_COMPRESSION=2 \
+    VNC_FRAMERATE=60 \
     VNC_PORT=5900 \
     NOVNC_PORT=6080
 
@@ -73,12 +77,14 @@ RUN set -eux; \
         libxss1 \
         libxtst6 \
         novnc \
+        tigervnc-standalone-server \
+        tigervnc-tools \
         tini \
         websockify \
         x11-utils \
-        x11vnc \
+        x11-xserver-utils \
         xauth \
-        xvfb; \
+        xcvt; \
     rm -rf /var/lib/apt/lists/*
 
 # The unprivileged account Signal Desktop runs as. UID 1000 matches the
